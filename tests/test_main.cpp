@@ -1,3 +1,5 @@
+#include "test_framework.hpp"
+
 int main() {
-    return 0;
+    return llmtest::run_all();
 }
