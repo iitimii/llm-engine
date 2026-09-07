@@ -25,7 +25,7 @@
         if (!(cond))                                              \
         {                                                         \
             ::llmtest::report_failure(__FILE__, __LINE__, #cond); \
-            throw ::llmtest::RequireFailed{};                  \
+            throw ::llmtest::RequireFailed{};                     \
         }                                                         \
     } while (0)
 
@@ -33,7 +33,8 @@
     do                                                                                     \
     {                                                                                      \
         ++::llmtest::stats().checks;                                                       \
-        if (!(std::abs(a - b) <= tol + tol * std::abs(b)))                                 \
+        const double _a = (a), _b = (b), _t = (tol);                                       \
+        if (!(std::fabs(_a - _b) <= _t + _t * std::fabs(_b)))                              \
             ::llmtest::report_failure(__FILE__, __LINE__, #a " ~= " #b " (tol " #tol ")"); \
     } while (0)
 
