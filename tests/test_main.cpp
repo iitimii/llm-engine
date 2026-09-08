@@ -1,5 +1,6 @@
 #include "test_framework.hpp"
 
-int main() {
+int main()
+{
     return llmtest::run_all();
 }

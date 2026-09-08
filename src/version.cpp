@@ -1,3 +1,5 @@
-namespace llm {
-    const char* version() {return "0.1.0";}
+#include "llm/common.hpp"
+namespace llm
+{
+    const char *version() { return "0.1.0"; }
 }
