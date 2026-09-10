@@ -32,7 +32,8 @@ endif()
 
 
 # Library
-add_library(llm_core STATIC src/version.cpp)
+add_library(llm_core STATIC src/version.cpp
+    src/tensor.cpp)
 target_include_directories(llm_core PUBLIC include)
 target_compile_features(llm_core PUBLIC cxx_std_20)
 target_link_libraries(llm_core PRIVATE llm_warnings)

@@ -17,7 +17,6 @@ llm::set_log_level(llm::LogLevel::Info);
 
 // TEST(abort_faliure)
 // {
-//     LLM_CHECK(false, "check abort");
-//     // llm::set_log_level(llm::LogLevel::Debug);
+//     // LLM_CHECK(false, "check abort");
 //     // LLM_ASSERT(false, "assert abort");
 // }
