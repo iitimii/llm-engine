@@ -2,17 +2,14 @@
 
 namespace llm
 {
-class Storage
-{
-    private:
 
-    void aligned_free()
+
+    void Storage::aligned_free()
     {
         std::free(buffer_ptr);
     }
 
-    public:
-    Storage(const Shape& shape, const DType& dtype)
+    Storage::Storage(const Shape& shape, const DType& dtype)
     {
         int64_t length = numel(shape);
         // std::vector<float> data(length);
@@ -23,17 +20,15 @@ class Storage
         ++alloc_count();
     }
 
-    ~Storage()
+    Storage::~Storage()
     {
         aligned_free();
     }
 
-    static int& alloc_count()
+    int& Storage::alloc_count()
     {
         static int object_count;
         return object_count;
     }
-
-};
 
 }

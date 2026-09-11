@@ -16,7 +16,8 @@ inline int64_t numel(const Shape &shape)
     return std::accumulate(shape.begin(), shape.end(), static_cast<int64_t>(1), std::multiplies<int64_t>());
 }
 
-inline Strides contiguous_strides(const Shape& shape){
+inline Strides contiguous_strides(const Shape& shape)
+{
 
 }
 
