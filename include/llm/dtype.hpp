@@ -15,13 +15,13 @@ namespace llm
         switch (dtype)
         {
         case DType::F32:
-            return std::size_t(32);
+            return std::size_t{4};
         case DType::F16:
-            return std::size_t(16);
+            return std::size_t{3};
         case DType::I8:
-            return std::size_t(8);
+            return std::size_t{1};
 
-            return std::size_t(0);
+            return std::size_t{0};
         }
     }
 
