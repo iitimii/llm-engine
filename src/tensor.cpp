@@ -10,7 +10,8 @@ namespace llm
 
     Storage::Storage(size_t alignment, size_t size)
     {
-        buffer_ptr = std::aligned_alloc(alignment, size);
+        size_t padded_size = size % alignment == 0 ? size : size - (size % alignment) + alignment;
+        buffer_ptr = std::aligned_alloc(alignment, padded_size);
         ++alloc_count();
     }
 

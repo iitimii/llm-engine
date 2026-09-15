@@ -17,7 +17,7 @@ namespace llm
         case DType::F32:
             return std::size_t{4};
         case DType::F16:
-            return std::size_t{3};
+            return std::size_t{2};
         case DType::I8:
             return std::size_t{1};
 

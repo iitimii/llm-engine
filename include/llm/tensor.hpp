@@ -77,15 +77,19 @@ namespace llm
         template <typename T>
         T &at(std::initializer_list<int64_t> indices)
         {
-            LLM_ASSERT(indices.size() == strides_.size(), "Unequal number of dimensions");
-            return data_ptr<T>()[std::inner_product(indices.begin(), indices.end(), strides_.begin(), int64_t{0})];
+            LLM_ASSERT(indices.size() == strides_.size(), "Unequal dimensions");
+            T *ptr = data_ptr<T>();
+            int64_t flat_location = std::inner_product(indices.begin(), indices.end(), strides_.begin(), int64_t{0});
+            return ptr[flat_location];
         }
 
         template <typename T>
         const T &at(std::initializer_list<int64_t> indices) const
         {
-            LLM_ASSERT(indices.size() == strides_.size(), "Unequal number of dimensions");
-            return data_ptr<const T>()[std::inner_product(indices.begin(), indices.end(), strides_.begin(), int64_t{0})];
+            LLM_ASSERT(indices.size() == strides_.size(), "Unequal dimensions");
+            const T *ptr = data_ptr<const T>();
+            int64_t flat_location = std::inner_product(indices.begin(), indices.end(), strides_.begin(), int64_t{0});
+            return ptr[flat_location];
         }
     };
 
