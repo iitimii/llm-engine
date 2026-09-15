@@ -92,6 +92,7 @@ namespace llmtest
             const int before = stats().check_failures;
 
             std::printf("[ RUN ] %s\n", tc.name.c_str());
+            std::fflush(stdout);
 
             try
             {
@@ -119,11 +120,13 @@ namespace llmtest
             if (stats().check_failures > before)
             {
                 std::printf("[ FAIL ] %s\n", tc.name.c_str());
+                std::fflush(stdout);
                 ++tests_failed;
             }
             else
             {
                 std::printf("[ OK ] %s\n", tc.name.c_str());
+                std::fflush(stdout);
             }
         }
 
