@@ -10,11 +10,7 @@ namespace llm
 
     Storage::Storage(size_t alignment, size_t size)
     {
-        // std::vector<float> data(length);
-        // auto data = std::make_shared<std::vector<float>>(length);
-
         buffer_ptr = std::aligned_alloc(alignment, size);
-
         ++alloc_count();
     }
 
@@ -25,29 +21,28 @@ namespace llm
 
     int &Storage::alloc_count()
     {
-        static int object_count;
+        static int object_count = 0;
         return object_count;
     }
 
-    const void *Storage::data() { return buffer_ptr; }
+    void *Storage::data() { return buffer_ptr; }
 
-    Tensor::Tensor(const Shape &shape, const DType &dtype, int alignment = 64) : shape_(shape), dtype_(dtype)
+    Tensor Tensor::empty(const Shape &shape, const DType &dtype, int alignment)
     {
-        strides_ = contiguous_strides(shape);
+        Tensor t;
+        t.shape_ = shape;
+        t.dtype_ = dtype;
+        t.strides_ = contiguous_strides(t.shape_);
+        t.offset_ = 0;
+        t.storage = std::make_shared<Storage>(alignment, t.nbytes());
+        return t;
     }
 
-    Shape Tensor::shape() { return shape_; }
-
-    Strides Tensor::strides() { return strides_; }
-
-    DType Tensor::dtype() { return dtype_; }
-
-    int64_t Tensor::ndim() { return shape_.size(); }
-
-    int64_t Tensor::numel() { return ::llm::numel(shape_); }
-
-    int64_t Tensor::nbytes() { return numel() * dtype_size(dtype_); }
-
-    bool Tensor::is_contiguous() { return strides_ == contiguous_strides(shape_); }
-
+    Shape Tensor::shape() const { return shape_; }
+    Strides Tensor::strides() const { return strides_; }
+    DType Tensor::dtype() const { return dtype_; }
+    int64_t Tensor::ndim() const { return shape_.size(); }
+    int64_t Tensor::numel() const { return ::llm::numel(shape_); }
+    int64_t Tensor::nbytes() const { return numel() * dtype_size(dtype_); }
+    bool Tensor::is_contiguous() const { return strides_ == contiguous_strides(shape_); }
 }

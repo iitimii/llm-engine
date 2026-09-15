@@ -25,7 +25,7 @@ namespace llm
         }
     }
 
-    inline char *dtype_name(DType dtype)
+    inline std::string_view dtype_name(DType dtype)
     {
         switch (dtype)
         {
@@ -35,7 +35,7 @@ namespace llm
             return "F16";
         case DType::I8:
             return "I8";
-
+        default:
             return "Invalid dtype";
         }
     }

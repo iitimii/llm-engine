@@ -4,6 +4,7 @@
 #include <functional>
 #include <cstdlib>
 #include <llm/dtype.hpp>
+#include <llm/common.hpp>
 
 namespace llm
 {
@@ -26,20 +27,18 @@ namespace llm
     class Storage
     {
     private:
-        Storage(const Storage &) = delete;
-        Storage &operator=(const Storage &) = delete;
-
         void *buffer_ptr;
 
         void aligned_free();
 
     public:
         Storage(size_t alignment, size_t size);
-
+        Storage(const Storage &) = delete;
+        Storage &operator=(const Storage &) = delete;
         ~Storage();
 
         static int &alloc_count();
-        const void* data();
+        void *data();
     };
 
     class Tensor
@@ -52,25 +51,41 @@ namespace llm
         DType dtype_;
 
     public:
-        Tensor(const Shape &shape, const DType &dtype, int alignment = 64);
+        Tensor() = default;
+        Tensor(const Tensor &other) = default;
+        Tensor &operator=(const Tensor &) = default;
+        Tensor(Tensor &&) = default;
+        Tensor &operator=(Tensor &&) = default;
+        ~Tensor() = default;
 
         static Tensor empty(const Shape &shape, const DType &dtype, int alignment = 64);
 
-        Shape shape();
-        Strides strides();
-        DType dtype();
-        int64_t ndim();
-        int64_t numel();
-        int64_t nbytes();
-        bool is_contiguous();
+        Shape shape() const;
+        Strides strides() const;
+        DType dtype() const;
+        int64_t ndim() const;
+        int64_t numel() const;
+        int64_t nbytes() const;
+        bool is_contiguous() const;
 
         template <typename T>
         T *data_ptr() { return static_cast<T *>(storage->data()) + offset_; }
 
         template <typename T>
-        T *at(std::initializer_list<int64_t> coordinates)
+        const T *data_ptr() const { return static_cast<const T *>(storage->data()) + offset_; }
+
+        template <typename T>
+        T &at(std::initializer_list<int64_t> indices)
         {
-            return data_ptr<T>() + std::inner_product(coordinates.begin(), coordinates.end(), strides.begin(), int64_t{0});
+            LLM_ASSERT(indices.size() == strides_.size(), "Unequal number of dimensions");
+            return data_ptr<T>()[std::inner_product(indices.begin(), indices.end(), strides_.begin(), int64_t{0})];
+        }
+
+        template <typename T>
+        const T &at(std::initializer_list<int64_t> indices) const
+        {
+            LLM_ASSERT(indices.size() == strides_.size(), "Unequal number of dimensions");
+            return data_ptr<const T>()[std::inner_product(indices.begin(), indices.end(), strides_.begin(), int64_t{0})];
         }
     };
 
