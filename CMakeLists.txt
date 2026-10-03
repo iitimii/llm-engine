@@ -51,6 +51,7 @@ add_executable(llm_tests
     tests/test_smoke.cpp
     tests/test_common.cpp
     tests/test_tensor.cpp
+    tests/test_memory.cpp
 )
 target_include_directories(llm_tests PRIVATE tests)
 target_link_libraries(llm_tests PRIVATE llm_core llm_warnings)

@@ -1,10 +1,13 @@
+#pragma once
 #include <vector>
 #include <cstdint>
 #include <numeric>
 #include <functional>
 #include <cstdlib>
+#include <memory>
 #include <llm/dtype.hpp>
 #include <llm/common.hpp>
+#include <llm/memory.hpp>
 
 namespace llm
 {
@@ -12,43 +15,38 @@ namespace llm
     using Shape = std::vector<int64_t>;
     using Strides = std::vector<int64_t>;
 
-    inline int64_t numel(const Shape &shape)
-    {
-        return std::accumulate(shape.begin(), shape.end(), int64_t{1}, std::multiplies<int64_t>());
-    }
-
-    inline Strides contiguous_strides(const Shape &shape)
-    {
-        Strides strides(shape.size());
-        std::exclusive_scan(shape.rbegin(), shape.rend(), strides.rbegin(), int64_t{1}, std::multiplies<int64_t>());
-        return strides;
-    }
+    int64_t numel(const Shape &shape);
+    Strides contiguous_strides(const Shape &shape);
 
     class Storage
     {
     private:
-        void *buffer_ptr;
-
-        void aligned_free();
+        std::byte *data_ = nullptr;
+        size_t nbytes_ = 0;
+        inline static uint64_t s_alloc_count = 0;
 
     public:
-        Storage(size_t alignment, size_t size);
+        explicit Storage(size_t nbytes, size_t alignment = 64);
         Storage(const Storage &) = delete;
         Storage &operator=(const Storage &) = delete;
         ~Storage();
 
-        static int &alloc_count();
-        void *data();
+        std::byte *data() noexcept { return data_; };
+        const std::byte *data() const noexcept { return data_; };
+        size_t nbytes() const noexcept { return nbytes_; }
+        static uint64_t alloc_count() noexcept { return s_alloc_count; };
     };
 
     class Tensor
     {
     private:
-        std::shared_ptr<Storage> storage;
-        int offset_;
+        int64_t rel_offset(std::initializer_list<int64_t> idx) const;
+
+        std::shared_ptr<Storage> storage_;
+        int64_t offset_{0};
         Shape shape_;
         Strides strides_;
-        DType dtype_;
+        DType dtype_ = DType::F32;
 
     public:
         Tensor() = default;
@@ -58,39 +56,46 @@ namespace llm
         Tensor &operator=(Tensor &&) = default;
         ~Tensor() = default;
 
-        static Tensor empty(const Shape &shape, const DType &dtype, int alignment = 64);
+        static Tensor empty(Shape shape, DType dtype, size_t alignment = 64);
 
-        Shape shape() const;
-        Strides strides() const;
-        DType dtype() const;
-        int64_t ndim() const;
-        int64_t numel() const;
-        int64_t nbytes() const;
-        bool is_contiguous() const;
-
-        template <typename T>
-        T *data_ptr() { return static_cast<T *>(storage->data()) + offset_; }
-
-        template <typename T>
-        const T *data_ptr() const { return static_cast<const T *>(storage->data()) + offset_; }
+        // layout queries
+        const Shape &shape() const noexcept { return shape_; }
+        const Strides &strides() const noexcept { return strides_; }
+        DType dtype() const noexcept { return dtype_; }
+        size_t ndim() const noexcept { return shape_.size(); }
+        int64_t numel() const noexcept { return llm::numel(shape_); }
+        size_t nbytes() const noexcept { return static_cast<size_t>(numel()) * dtype_size(dtype_); }
+        bool is_contiguous() const noexcept;
+        bool defined() const noexcept { return storage_ != nullptr; }
 
         template <typename T>
-        T &at(std::initializer_list<int64_t> indices)
+        T *data_ptr() { return reinterpret_cast<T *>(storage_->data()) + offset_; }
+
+        template <typename T>
+        const T *data_ptr() const { return reinterpret_cast<const T *>(storage_->data()) + offset_; }
+
+        template <typename T>
+        T &at(std::initializer_list<int64_t> idx)
         {
-            LLM_ASSERT(indices.size() == strides_.size(), "Unequal dimensions");
-            T *ptr = data_ptr<T>();
-            int64_t flat_location = std::inner_product(indices.begin(), indices.end(), strides_.begin(), int64_t{0});
-            return ptr[flat_location];
+            return data_ptr<T>()[rel_offset(idx)];
         }
 
         template <typename T>
-        const T &at(std::initializer_list<int64_t> indices) const
+        const T &at(std::initializer_list<int64_t> idx) const
         {
-            LLM_ASSERT(indices.size() == strides_.size(), "Unequal dimensions");
-            const T *ptr = data_ptr<const T>();
-            int64_t flat_location = std::inner_product(indices.begin(), indices.end(), strides_.begin(), int64_t{0});
-            return ptr[flat_location];
+            return data_ptr<T>()[rel_offset(idx)];
         }
+
+        Tensor reshape(Shape new_shape) const;
+        Tensor view(Shape new_shape) const {return reshape(std::move(new_shape));};
+        Tensor permute(const std::vector<int> &dims) const;
+        Tensor transpose(int dim0, int dim1) const;
+        Tensor slice(int dim, int64_t start, int64_t stop) const;
+
+        Tensor contiguous() const;
+
+        const void *storage_id() const noexcept { return storage_.get(); }
+        int64_t offset() const noexcept { return offset_; }
     };
 
 }

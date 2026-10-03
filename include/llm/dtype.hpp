@@ -1,9 +1,11 @@
+#pragma once
 #include <cstddef>
 #include <cstdint>
+#include"llm/common.hpp"
 
 namespace llm
 {
-    enum class DType
+    enum class DType : uint8_t
     {
         F32,
         F16,
@@ -20,9 +22,8 @@ namespace llm
             return std::size_t{2};
         case DType::I8:
             return std::size_t{1};
-
-            return std::size_t{0};
         }
+        LLM_UNREACHABLE();
     }
 
     inline std::string_view dtype_name(DType dtype)
@@ -35,8 +36,7 @@ namespace llm
             return "F16";
         case DType::I8:
             return "I8";
-        default:
-            return "Invalid dtype";
         }
+        LLM_UNREACHABLE();
     }
 }
